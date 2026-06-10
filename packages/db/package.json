@@ -1,0 +1,22 @@
+{
+  "name": "@aigc-video-hub/db",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prisma:generate": "node scripts/prisma-with-root-env.mjs generate --schema prisma/schema.prisma",
+    "prisma:migrate": "node scripts/prisma-with-root-env.mjs migrate dev --schema prisma/schema.prisma",
+    "prisma:deploy": "node scripts/prisma-with-root-env.mjs migrate deploy --schema prisma/schema.prisma",
+    "prisma:studio": "node scripts/prisma-with-root-env.mjs studio --schema prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
+    "@prisma/client": "^6.19.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0",
+    "typescript": "^5.7.2"
+  }
+}

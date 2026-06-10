@@ -1,0 +1,46 @@
+{
+  "embeddingModel": "jinaai/jina-clip-v2",
+  "_note": "kind=material 走商品素材入库；kind=reference 走爆款视频拆解库，不流入创作。embedding 字段若出现会被脚本强制丢弃并由后端用统一 Jina CLIP 重算。",
+  "items": [
+    {
+      "kind": "material",
+      "type": "image",
+      "id": "base_mat_projector_main",
+      "name": "便携投影仪 主图",
+      "productId": "demo-product",
+      "sourceDeclaration": "base 数据集 / 商家授权 / 已统一向量",
+      "tags": {
+        "product": ["便携投影仪", "卧室观影"],
+        "video": ["主图", "证据特写"],
+        "slice": ["产品全景"]
+      }
+    },
+    {
+      "kind": "material",
+      "type": "video",
+      "id": "base_mat_projector_demo",
+      "name": "便携投影仪 演示片段",
+      "productId": "demo-product",
+      "sourceDeclaration": "base 数据集 / 商家授权 / 已统一向量",
+      "tags": {
+        "product": ["便携投影仪"],
+        "video": ["使用场景"],
+        "slice": ["手持操作", "投影画面"]
+      }
+    },
+    {
+      "kind": "reference",
+      "id": "base_ref_first_person_unboxing",
+      "name": "第一人称开箱爆款",
+      "sourceUrl": "https://example.com/reference-videos/first-person-unboxing",
+      "sourceDeclaration": "公开来源 / 仅做拆解参考 / 不流入创作",
+      "licenseType": "public_reference",
+      "breakdownReport": {
+        "title": "第一人称开箱爆款拆解",
+        "hook": "前 3 秒手部入画 + 痛点设问",
+        "sellingPoints": ["真实使用感", "细节证据", "对比展示"],
+        "style": "暖色调 / 轻快电子 BGM / 节奏快"
+      }
+    }
+  ]
+}

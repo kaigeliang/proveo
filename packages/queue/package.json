@@ -1,0 +1,17 @@
+{
+  "name": "@aigc-video-hub/queue",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "bullmq": "^5.64.1",
+    "ioredis": "5.10.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

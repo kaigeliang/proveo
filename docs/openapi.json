@@ -1,0 +1,666 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Proveo / AIGC 带货视频生成系统 API",
+    "version": "1.0.0",
+    "description": "自动生成的路径骨架；请求/响应 schema 以代码为准。"
+  },
+  "servers": [{ "url": "http://localhost:3000" }],
+  "paths": {
+    "/api/feedback/ingest": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/feedback/ingest",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/feedback/recompute": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/feedback/recompute",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/feedback/simulate": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/feedback/simulate",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/feedback/seed-kalodata": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/feedback/seed-kalodata",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/feedback/evolution": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/feedback/evolution",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/feedback/message": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/feedback/message",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/feedback/messages": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/feedback/messages",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/analytics/attribution": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/analytics/attribution",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/analytics/overview": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/analytics/overview",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/analytics/ab-compare": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/analytics/ab-compare",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/analytics/videos": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/analytics/videos",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/observability": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/observability",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/compliance/check": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/compliance/check",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/compliance/{id}/resolve": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/compliance/:id/resolve",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/compliance/rules": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/compliance/rules",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/research/run": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/research/run",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/research/{productId}": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/research/:productId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/policy/check": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/policy/check",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/passport/{videoId}": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/passport/:videoId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/qa/repair": {
+      "post": {
+        "tags": ["runtime-core"],
+        "summary": "POST /api/qa/repair",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trace/{taskId}": {
+      "get": {
+        "tags": ["runtime-core"],
+        "summary": "GET /api/trace/:taskId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs": {
+      "post": {
+        "tags": ["agent-runs"],
+        "summary": "POST /api/agent-runs",
+        "responses": { "200": { "description": "OK" } }
+      },
+      "get": {
+        "tags": ["agent-runs"],
+        "summary": "GET /api/agent-runs",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs/{runId}": {
+      "get": {
+        "tags": ["agent-runs"],
+        "summary": "GET /api/agent-runs/:runId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs/{runId}/steps": {
+      "get": {
+        "tags": ["agent-runs"],
+        "summary": "GET /api/agent-runs/:runId/steps",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs/{runId}/artifacts": {
+      "get": {
+        "tags": ["agent-runs"],
+        "summary": "GET /api/agent-runs/:runId/artifacts",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs/{runId}/cancel": {
+      "post": {
+        "tags": ["agent-runs"],
+        "summary": "POST /api/agent-runs/:runId/cancel",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs/{runId}/retry": {
+      "post": {
+        "tags": ["agent-runs"],
+        "summary": "POST /api/agent-runs/:runId/retry",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs/{runId}/resume": {
+      "post": {
+        "tags": ["agent-runs"],
+        "summary": "POST /api/agent-runs/:runId/resume",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent-runs/{runId}/stream": {
+      "get": {
+        "tags": ["agent-runs"],
+        "summary": "GET /api/agent-runs/:runId/stream",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agents/workflow": {
+      "get": {
+        "tags": ["agents"],
+        "summary": "GET /api/agents/workflow",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/agent/chat": {
+      "post": {
+        "tags": ["copilot"],
+        "summary": "POST /api/agent/chat",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/intelligence/status": {
+      "get": {
+        "tags": ["intelligence"],
+        "summary": "GET /api/intelligence/status",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/intelligence/voc": {
+      "get": {
+        "tags": ["intelligence"],
+        "summary": "GET /api/intelligence/voc",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/intelligence/reviews": {
+      "get": {
+        "tags": ["intelligence"],
+        "summary": "GET /api/intelligence/reviews",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/intelligence/creatives": {
+      "get": {
+        "tags": ["intelligence"],
+        "summary": "GET /api/intelligence/creatives",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/intelligence/scenes": {
+      "get": {
+        "tags": ["intelligence"],
+        "summary": "GET /api/intelligence/scenes",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/materials/upload": {
+      "post": {
+        "tags": ["materials"],
+        "summary": "POST /api/materials/upload",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/materials": {
+      "get": {
+        "tags": ["materials"],
+        "summary": "GET /api/materials",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/materials/{id}/angles": {
+      "get": {
+        "tags": ["materials"],
+        "summary": "GET /api/materials/:id/angles",
+        "responses": { "200": { "description": "OK" } }
+      },
+      "post": {
+        "tags": ["materials"],
+        "summary": "POST /api/materials/:id/angles",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/materials/{id}": {
+      "delete": {
+        "tags": ["materials"],
+        "summary": "DELETE /api/materials/:id",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/materials/search": {
+      "get": {
+        "tags": ["materials"],
+        "summary": "GET /api/materials/search",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/slices/{id}": {
+      "get": {
+        "tags": ["materials"],
+        "summary": "GET /api/slices/:id",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/reference-videos": {
+      "get": {
+        "tags": ["materials"],
+        "summary": "GET /api/reference-videos",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/reference-videos/oembed": {
+      "get": {
+        "tags": ["materials"],
+        "summary": "GET /api/reference-videos/oembed",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/reference-videos/search": {
+      "get": {
+        "tags": ["materials"],
+        "summary": "GET /api/reference-videos/search",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/reference-videos/{id}": {
+      "delete": {
+        "tags": ["materials"],
+        "summary": "DELETE /api/reference-videos/:id",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/reference-videos/import": {
+      "post": {
+        "tags": ["materials"],
+        "summary": "POST /api/reference-videos/import",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": ["projects"],
+        "summary": "GET /api/projects",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/projects/{projectId}/snapshot": {
+      "get": {
+        "tags": ["projects"],
+        "summary": "GET /api/projects/:projectId/snapshot",
+        "responses": { "200": { "description": "OK" } }
+      },
+      "put": {
+        "tags": ["projects"],
+        "summary": "PUT /api/projects/:projectId/snapshot",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/projects/snapshot": {
+      "post": {
+        "tags": ["projects"],
+        "summary": "POST /api/projects/snapshot",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/projects/{projectId}": {
+      "delete": {
+        "tags": ["projects"],
+        "summary": "DELETE /api/projects/:projectId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/recipes": {
+      "get": {
+        "tags": ["recipes"],
+        "summary": "GET /api/recipes",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/recipes/extract": {
+      "post": {
+        "tags": ["recipes"],
+        "summary": "POST /api/recipes/extract",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/recipes/{id}": {
+      "get": {
+        "tags": ["recipes"],
+        "summary": "GET /api/recipes/:id",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/recipes/{id}/clone": {
+      "post": {
+        "tags": ["recipes"],
+        "summary": "POST /api/recipes/:id/clone",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/recipes/{id}/score": {
+      "post": {
+        "tags": ["recipes"],
+        "summary": "POST /api/recipes/:id/score",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/render/full": {
+      "post": {
+        "tags": ["index"],
+        "summary": "POST /api/render/full",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/render/shot": {
+      "post": {
+        "tags": ["render"],
+        "summary": "POST /api/render/shot",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/render/{scriptId}/preview": {
+      "get": {
+        "tags": ["render"],
+        "summary": "GET /api/render/:scriptId/preview",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/render/{scriptId}/export": {
+      "post": {
+        "tags": ["index"],
+        "summary": "POST /api/render/:scriptId/export",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/tasks/{taskId}": {
+      "get": {
+        "tags": ["render"],
+        "summary": "GET /api/tasks/:taskId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/tasks/{taskId}/retry": {
+      "post": {
+        "tags": ["render"],
+        "summary": "POST /api/tasks/:taskId/retry",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/tasks/{taskId}/stream": {
+      "get": {
+        "tags": ["render"],
+        "summary": "GET /api/tasks/:taskId/stream",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/tasks/{taskId}/trace": {
+      "get": {
+        "tags": ["render"],
+        "summary": "GET /api/tasks/:taskId/trace",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/scripts/generate": {
+      "post": {
+        "tags": ["scripts"],
+        "summary": "POST /api/scripts/generate",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/scripts/{id}": {
+      "get": {
+        "tags": ["scripts"],
+        "summary": "GET /api/scripts/:id",
+        "responses": { "200": { "description": "OK" } }
+      },
+      "patch": {
+        "tags": ["scripts"],
+        "summary": "PATCH /api/scripts/:id",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/scripts/{id}/conversion": {
+      "get": {
+        "tags": ["scripts"],
+        "summary": "GET /api/scripts/:id/conversion",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/scripts/{scriptId}/shots/{shotId}": {
+      "patch": {
+        "tags": ["scripts"],
+        "summary": "PATCH /api/scripts/:scriptId/shots/:shotId",
+        "responses": { "200": { "description": "OK" } }
+      },
+      "delete": {
+        "tags": ["scripts"],
+        "summary": "DELETE /api/scripts/:scriptId/shots/:shotId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/scripts/{scriptId}/shots": {
+      "post": {
+        "tags": ["scripts"],
+        "summary": "POST /api/scripts/:scriptId/shots",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "tags": ["scripts"],
+        "summary": "GET /api/templates",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trust-dag/passport/{videoId}": {
+      "get": {
+        "tags": ["trust-dag"],
+        "summary": "GET /api/trust-dag/passport/:videoId",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trust-dag/nodes": {
+      "get": {
+        "tags": ["trust-dag"],
+        "summary": "GET /api/trust-dag/nodes",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trust-dag/nodes/{nodeId}/dependents": {
+      "get": {
+        "tags": ["trust-dag"],
+        "summary": "GET /api/trust-dag/nodes/:nodeId/dependents",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trust-dag/nodes/{nodeId}/stale": {
+      "post": {
+        "tags": ["trust-dag"],
+        "summary": "POST /api/trust-dag/nodes/:nodeId/stale",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trends/status": {
+      "get": {
+        "tags": ["trends"],
+        "summary": "GET /api/trends/status",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trends/sources": {
+      "get": {
+        "tags": ["trends"],
+        "summary": "GET /api/trends/sources",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trends/items": {
+      "get": {
+        "tags": ["trends"],
+        "summary": "GET /api/trends/items",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trends/search": {
+      "get": {
+        "tags": ["trends"],
+        "summary": "GET /api/trends/search",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trends/vector-search": {
+      "get": {
+        "tags": ["trends"],
+        "summary": "GET /api/trends/vector-search",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trends/qdrant-search": {
+      "get": {
+        "tags": ["trends"],
+        "summary": "GET /api/trends/qdrant-search",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/trends/refresh": {
+      "post": {
+        "tags": ["trends"],
+        "summary": "POST /api/trends/refresh",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/video-tags/status": {
+      "get": {
+        "tags": ["video-tags"],
+        "summary": "GET /api/video-tags/status",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/video-tags/reindex": {
+      "post": {
+        "tags": ["video-tags"],
+        "summary": "POST /api/video-tags/reindex",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/video-tags/search": {
+      "get": {
+        "tags": ["video-tags"],
+        "summary": "GET /api/video-tags/search",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": ["index"],
+        "summary": "GET /healthz",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/healthz": {
+      "get": {
+        "tags": ["index"],
+        "summary": "GET /api/healthz",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": ["index"],
+        "summary": "GET /metrics",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/auth/token": {
+      "post": {
+        "tags": ["index"],
+        "summary": "POST /api/auth/token",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["index"],
+        "summary": "GET /api/health",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": ["index"],
+        "summary": "GET /",
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  }
+}

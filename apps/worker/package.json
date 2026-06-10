@@ -1,0 +1,29 @@
+{
+  "name": "aigc-video-worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/apps/worker/src/index.js",
+  "scripts": {
+    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/apps/worker/src/index.js"
+  },
+  "dependencies": {
+    "@aigc-video-hub/db": "1.0.0",
+    "@aigc-video-hub/agent-runtime": "1.0.0",
+    "@aigc-video-hub/queue": "1.0.0",
+    "@aigc-video-hub/storage": "1.0.0",
+    "@aigc-video-hub/shared": "1.0.0",
+    "@aigc-video-hub/trustloop": "1.0.0",
+    "axios": "^1.16.1",
+    "bullmq": "^5.64.1",
+    "dotenv": "^16.4.5",
+    "ioredis": "5.10.1",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.2"
+  }
+}

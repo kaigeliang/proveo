@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build and test output
+dist/
+build/
+coverage/
+apps/web/dist/
+apps/api/dist/
+
+# Runtime-generated files
+apps/api/data/
+apps/api/var/
+apps/api/storage/
+apps/api/public/generated/
+apps/api/public/uploads/
+apps/api/public/reference-videos/
+apps/worker/apps/
+storage/
+output/
+tmp/
+temp/
+
+# Caches
+.cache/
+apps/api/.cache/
+.playwright-cli/
+.prisma/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editor / local tooling state
+.DS_Store
+.idea/
+.vscode/
+.claude/
+.codex/
+.agents/
+*.swp
+*.swo

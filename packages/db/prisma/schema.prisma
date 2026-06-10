@@ -1,0 +1,908 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id        String      @id
+  type      String
+  status    String
+  progress  Int         @default(0)
+  step      String      @default("queued")
+  error     String?
+  payload   Json?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  traces    TaskTrace[]
+
+  @@index([status])
+  @@index([type])
+  @@index([updatedAt])
+}
+
+model TaskTrace {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  step      String
+  progress  Int
+  message   String
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model Material {
+  id                String          @id
+  productId         String?
+  name              String?
+  type              String
+  sourceUrl         String
+  sourceObjectKey   String?
+  sourceDeclaration String
+  uploadedAt        DateTime        @default(now())
+  slices            Slice[]
+  angles            MaterialAngle[]
+
+  @@index([productId])
+  @@index([uploadedAt])
+}
+
+model Slice {
+  id                 String   @id
+  materialId         String
+  material           Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  thumbnailUrl       String
+  thumbnailObjectKey String?
+  clipUrl            String
+  clipObjectKey      String?
+  startTime          Float    @default(0)
+  endTime            Float    @default(0)
+  tags               Json
+  summary            String
+  embedding          Json?
+
+  @@index([materialId])
+}
+
+model MaterialAngle {
+  id                String   @id
+  materialId        String
+  material          Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  productId         String?
+  view              String
+  key               String
+  label             String
+  imageUrl          String
+  referenceImageUrl String
+  previewUrl        String?
+  sourceImageUrl    String
+  promptHint        String
+  pose              Json?
+  provider          String
+  status            String
+  note              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([materialId, key])
+  @@index([materialId])
+  @@index([productId])
+  @@index([provider])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model VideoAsset {
+  id                String         @id
+  productId         String?
+  sourceUrl         String
+  sourceObjectKey   String?
+  sourceDeclaration String
+  title             String?
+  platform          String?
+  durationMs        Int?
+  contentHash       String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  segments          VideoSegment[]
+
+  @@index([productId])
+  @@index([platform])
+  @@index([contentHash])
+  @@index([updatedAt])
+}
+
+model VideoSegment {
+  id            String               @id
+  videoId       String
+  video         VideoAsset           @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  startMs       Int
+  endMs         Int
+  transcript    String?
+  visualSummary String
+  thumbnailUrl  String?
+  clipUrl       String?
+  contentHash   String?
+  tags          VideoTagAssignment[]
+  embeddings    EmbeddingVector[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([videoId])
+  @@index([contentHash])
+  @@index([updatedAt])
+}
+
+model VideoTag {
+  id             String               @id @default(cuid())
+  namespace      String
+  name           String
+  normalizedName String
+  description    String?
+  assignments    VideoTagAssignment[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@unique([namespace, normalizedName])
+  @@index([namespace])
+  @@index([normalizedName])
+}
+
+model VideoTagAssignment {
+  segmentId    String
+  tagId        String
+  segment      VideoSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  tag          VideoTag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  confidence   Float        @default(1)
+  source       String
+  modelVersion String?
+  evidence     Json?
+  createdAt    DateTime     @default(now())
+
+  @@id([segmentId, tagId, source])
+  @@index([tagId])
+  @@index([source])
+  @@index([confidence])
+}
+
+model EmbeddingVector {
+  id              String        @id @default(cuid())
+  ownerType       String
+  ownerId         String
+  segmentId       String?
+  segment         VideoSegment? @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  embeddingModel  String
+  dims            Int
+  vector          Json?
+  quantizedObject String?
+  vectorHash      String?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([ownerType, ownerId, embeddingModel])
+  @@index([segmentId])
+  @@index([embeddingModel])
+  @@index([vectorHash])
+}
+
+model EmbeddingVersion {
+  id            String    @id
+  modelId       String
+  dims          Int
+  quantization  String
+  vectorStore   String
+  promptPolicy  Json?
+  isActive      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  lastRebuiltAt DateTime?
+
+  @@index([isActive])
+  @@index([modelId])
+}
+
+model RetrievalJob {
+  id           String    @id
+  source       String
+  status       String
+  cursor       String?
+  filters      Json?
+  stats        Json?
+  error        String?
+  scheduledFor DateTime?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([source])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+model TrendSource {
+  id          String      @id
+  platform    String
+  name        String
+  url         String?
+  enabled     Boolean     @default(true)
+  refreshCron String?
+  config      Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       TrendItem[]
+
+  @@index([platform])
+  @@index([enabled])
+}
+
+model TrendItem {
+  id          String      @id
+  sourceId    String
+  source      TrendSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  externalId  String
+  title       String
+  url         String?
+  tags        Json
+  metrics     Json?
+  embeddingId String?
+  fetchedAt   DateTime
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([sourceId, externalId])
+  @@index([sourceId])
+  @@index([fetchedAt])
+}
+
+model Script {
+  id                String   @id
+  productId         String
+  generationProfile String   @default("trusted_publish")
+  productUrl        String?
+  referenceImageUrl String?
+  materialIds       String[] @default([])
+  sourceMode        String
+  sourceRef         String?
+  narrative         String
+  visualStyle       String
+  bgm               String
+  aspectRatio       String
+  language          String
+  constraints       String[] @default([])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  shots             Shot[]
+
+  @@index([productId])
+  @@index([updatedAt])
+}
+
+model Shot {
+  id             String   @id
+  scriptId       String
+  script         Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  order          Int
+  duration       Int
+  visualDesc     String
+  camera         String
+  narration      String
+  subtitle       String
+  materialRef    String?
+  transition     String?
+  factors        Json
+  status         String
+  assetUrl       String?
+  assetObjectKey String?
+  claimIds       String[] @default([])
+  evidenceIds    String[] @default([])
+
+  @@index([scriptId])
+  @@index([order])
+}
+
+model Project {
+  id                    String                 @id
+  title                 String
+  productId             String?
+  productTitle          String?
+  status                String                 @default("active")
+  activeConversationId  String?
+  activeScriptVersionId String?
+  activeRenderVersionId String?
+  activeTaskId          String?
+  activeRunId           String?
+  snapshot              Json?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  conversations         Conversation[]
+  scriptVersions        ProjectScriptVersion[]
+  renderVersions        ProjectRenderVersion[]
+
+  @@index([productId])
+  @@index([status])
+  @@index([updatedAt])
+}
+
+model Conversation {
+  id             String   @id
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title          String
+  messages       Json
+  activityItems  Json?
+  magicProgress  Json?
+  activeTaskId   String?
+  activeRunId    String?
+  activeScriptId String?
+  snapshot       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([activeTaskId])
+  @@index([activeRunId])
+  @@index([updatedAt])
+}
+
+model ProjectScriptVersion {
+  id             String                 @id
+  projectId      String
+  project        Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label          String
+  scriptId       String?
+  sourceRunId    String?
+  scriptSnapshot Json
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  renderVersions ProjectRenderVersion[]
+
+  @@index([projectId])
+  @@index([scriptId])
+  @@index([sourceRunId])
+  @@index([createdAt])
+}
+
+model ProjectRenderVersion {
+  id              String                @id
+  projectId       String
+  project         Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scriptVersionId String?
+  scriptVersion   ProjectScriptVersion? @relation(fields: [scriptVersionId], references: [id], onDelete: SetNull)
+  label           String
+  taskId          String?
+  videoId         String?
+  status          String                @default("completed")
+  result          Json
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([projectId])
+  @@index([scriptVersionId])
+  @@index([taskId])
+  @@index([videoId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ReferenceVideo {
+  id                String            @id
+  sourceUrl         String
+  localVideoUrl     String?
+  localObjectKey    String?
+  sourceDeclaration String
+  licenseType       String?
+  usageScope        String?
+  breakdownReport   Json
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  sceneTruths       VideoSceneTruth[]
+}
+
+model ProductVocInsight {
+  id                   String                 @id
+  source               String                 @default("fastmoss")
+  platform             String                 @default("tiktok")
+  sourceUrl            String?
+  productExternalId    String?
+  productTitle         String
+  category             String?
+  analysisWindow       String?
+  analyzedCommentCount Int?
+  consumerProfile      Json?
+  starImpact           Json?
+  usageScenarios       Json?
+  positiveExperience   Json?
+  negativeExperience   Json?
+  purchaseMotives      Json?
+  unmetExpectations    Json?
+  summaryAdvice        String?
+  raw                  Json?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  reviews              ProductReviewInsight[]
+
+  @@index([source])
+  @@index([platform])
+  @@index([category])
+  @@index([productTitle])
+  @@index([createdAt])
+}
+
+model ProductReviewInsight {
+  id           String             @id
+  vocInsightId String?
+  vocInsight   ProductVocInsight? @relation(fields: [vocInsightId], references: [id], onDelete: SetNull)
+  source       String             @default("fastmoss")
+  platform     String             @default("tiktok")
+  sourceUrl    String?
+  productTitle String?
+  sku          String?
+  reviewedAt   DateTime?
+  rating       Float?
+  language     String?
+  sentiment    String?
+  reviewText   String
+  tags         Json?
+  motives      Json?
+  expectations Json?
+  behaviors    Json?
+  raw          Json?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([vocInsightId])
+  @@index([source])
+  @@index([platform])
+  @@index([productTitle])
+  @@index([sentiment])
+  @@index([rating])
+  @@index([reviewedAt])
+}
+
+model CreativePerformance {
+  id              String            @id
+  source          String            @default("fastmoss")
+  platform        String            @default("tiktok")
+  sourceUrl       String?
+  videoUrl        String?
+  videoId         String?
+  productTitle    String?
+  productUrl      String?
+  shopName        String?
+  creatorHandle   String?
+  advertiserName  String?
+  country         String?
+  category        String?
+  adCopy          String?
+  publishedAt     DateTime?
+  firstSeenAt     DateTime?
+  lastSeenAt      DateTime?
+  durationSeconds Float?
+  resolution      String?
+  priceText       String?
+  rankType        String?
+  rank            Int?
+  views           Float?
+  impressions     Float?
+  interactions    Float?
+  adSpend         Float?
+  sales           Float?
+  salesAmount     Float?
+  roas            Float?
+  ctr             Float?
+  interactionRate Float?
+  adDays          Float?
+  metrics         Json?
+  raw             Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  sceneTruths     VideoSceneTruth[]
+
+  @@index([source])
+  @@index([platform])
+  @@index([videoId])
+  @@index([country])
+  @@index([category])
+  @@index([rankType])
+  @@index([rank])
+  @@index([roas])
+  @@index([sales])
+  @@index([publishedAt])
+}
+
+model VideoSceneTruth {
+  id                    String               @id
+  referenceVideoId      String?
+  referenceVideo        ReferenceVideo?      @relation(fields: [referenceVideoId], references: [id], onDelete: SetNull)
+  creativePerformanceId String?
+  creativePerformance   CreativePerformance? @relation(fields: [creativePerformanceId], references: [id], onDelete: SetNull)
+  source                String               @default("fastmoss")
+  videoUrl              String?
+  sceneIndex            Int
+  startMs               Int
+  endMs                 Int
+  summary               String
+  transcript            String?
+  labels                Json?
+  ocrTexts              Json?
+  subtitlePlan          Json?
+  visual                Json?
+  raw                   Json?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  @@index([referenceVideoId])
+  @@index([creativePerformanceId])
+  @@index([source])
+  @@index([videoUrl])
+  @@index([startMs])
+}
+
+model Recipe {
+  id                String        @id
+  sourceUrl         String?
+  sourceReferenceId String?
+  sourceDeclaration String
+  productId         String?
+  title             String
+  category          String?
+  durationSeconds   Float?
+  pace              String?
+  segments          Json
+  factors           Json
+  visual            Json?
+  scoring           Json?
+  status            String        @default("ready")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  clones            RecipeClone[]
+
+  @@index([sourceReferenceId])
+  @@index([productId])
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RecipeClone {
+  id             String   @id
+  recipeId       String
+  recipe         Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  productId      String
+  scriptId       String?
+  taskId         String?
+  status         String   @default("queued")
+  benchmarkScore Float?
+  missingFactors Json?
+  scoreBreakdown Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([recipeId])
+  @@index([productId])
+  @@index([scriptId])
+  @@index([taskId])
+  @@index([status])
+}
+
+model EvidenceRecord {
+  id        String   @id @default(cuid())
+  productId String
+  output    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId])
+}
+
+model VideoPassportRecord {
+  videoId             String   @id
+  scriptId            String
+  trustScore          Float
+  evidenceCoverage    Float
+  realMaterialRatio   Float
+  approvedClaims      Int
+  needsEvidenceClaims Int?
+  blockedClaims       Int
+  repairedClaims      Int
+  policyRisk          String
+  iterationCount      Int
+  evidenceBreakdown   Json
+  generatedAt         DateTime
+
+  @@index([scriptId])
+}
+
+model VideoPerfRecord {
+  id             String   @id
+  scriptId       String
+  videoId        String?
+  source         String?
+  factorSnapshot Json
+  impressions    Int
+  ctr            Float
+  completionRate Float
+  conversionRate Float
+  gmv            Float
+  createdAt      DateTime @default(now())
+
+  @@index([scriptId])
+  @@index([videoId])
+  @@index([source])
+}
+
+model ComplianceCheckRecord {
+  id         String   @id
+  targetType String
+  targetId   String
+  level      String
+  hits       Json
+  createdAt  DateTime @default(now())
+  resolvedBy String?
+  resolution String?
+
+  @@index([targetType, targetId])
+  @@index([level])
+}
+
+model MessageFeedbackRecord {
+  id        String   @id
+  productId String?
+  messageId String
+  reaction  String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([messageId])
+}
+
+model FactorWeight {
+  id         String   @id
+  factorId   String   @unique
+  weight     Float    @default(1.0)
+  sampleSize Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@index([factorId])
+}
+
+model EvolutionPoint {
+  id          String   @id @default(cuid())
+  factorId    String
+  factorType  String
+  factorValue String
+  weight      Float
+  sampleSize  Int
+  updatedAt   DateTime @default(now())
+
+  @@index([factorId])
+  @@index([updatedAt])
+}
+
+model TrustLoopTrace {
+  id        String   @id @default(cuid())
+  taskId    String
+  step      String
+  agentName String?
+  message   String
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model AuditResultRecord {
+  id        String   @id @default(cuid())
+  taskId    String   @unique
+  scriptId  String
+  level     String
+  issues    Json
+  metrics   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scriptId])
+}
+
+model AgentRun {
+  id           String          @id
+  taskId       String?
+  kind         String
+  status       String
+  graphVersion String
+  productId    String?
+  scriptId     String?
+  videoId      String?
+  input        Json
+  output       Json?
+  error        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  steps        AgentStep[]
+  artifacts    AgentArtifact[]
+
+  @@index([status])
+  @@index([kind])
+  @@index([productId])
+  @@index([scriptId])
+  @@index([updatedAt])
+}
+
+model AgentStep {
+  id         String          @id
+  runId      String
+  run        AgentRun        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  nodeId     String
+  agentName  String
+  status     String
+  attempt    Int             @default(1)
+  inputRefs  String[]        @default([])
+  outputRefs String[]        @default([])
+  decision   String?
+  reason     String?
+  error      String?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  toolCalls  AgentToolCall[]
+  artifacts  AgentArtifact[]
+
+  @@index([runId])
+  @@index([nodeId])
+  @@index([agentName])
+  @@index([status])
+}
+
+model AgentArtifact {
+  id          String     @id
+  runId       String
+  run         AgentRun   @relation(fields: [runId], references: [id], onDelete: Cascade)
+  stepId      String?
+  step        AgentStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  type        String
+  content     Json?
+  objectKey   String?
+  contentHash String?
+  createdAt   DateTime   @default(now())
+
+  @@index([runId])
+  @@index([stepId])
+  @@index([type])
+}
+
+model AgentToolCall {
+  id           String    @id
+  runId        String
+  stepId       String
+  step         AgentStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  toolName     String
+  status       String
+  input        Json?
+  output       Json?
+  latencyMs    Int?
+  costEstimate Float?
+  error        String?
+  createdAt    DateTime  @default(now())
+
+  @@index([runId])
+  @@index([stepId])
+  @@index([toolName])
+}
+
+// ─── TrustDAG ────────────────────────────────────────────────────────────────
+// 内容寻址 DAG：每个节点 id = SHA-256(content + sorted(parentIds))
+// 类型链：evidence → claim → shot → script → video
+// 这是整个 TrustLoop 的数据骨架；Passport 由 DAG 遍历推导，而非单独生成
+
+model TrustNode {
+  id              String    @id // = contentHash
+  nodeType        String // 'evidence' | 'claim' | 'shot' | 'script' | 'video'
+  parentIds       String[]  @default([])
+  contentHash     String    @unique
+  payload         Json
+  status          String    @default("active") // 'active' | 'stale'
+  staleAt         DateTime?
+  staleReason     String?
+  invalidatedById String?
+  runId           String?
+  taskId          String?
+  productId       String?
+  scriptId        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  outgoing TrustEdge[] @relation("TrustEdgeSource")
+  incoming TrustEdge[] @relation("TrustEdgeTarget")
+
+  @@index([nodeType])
+  @@index([status])
+  @@index([runId])
+  @@index([productId])
+  @@index([scriptId])
+  @@index([taskId])
+}
+
+model TrustEdge {
+  id        String   @id @default(cuid())
+  sourceId  String
+  targetId  String
+  edgeType  String // 'derives' | 'supports' | 'refutes' | 'uses'
+  weight    Float    @default(1.0)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  source TrustNode @relation("TrustEdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target TrustNode @relation("TrustEdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId, edgeType])
+  @@index([sourceId])
+  @@index([targetId])
+  @@index([edgeType])
+}
+
+model ApiIdempotencyRecord {
+  key         String   @id
+  route       String
+  requestHash String
+  status      String   @default("pending") // 'pending' | 'completed' | 'failed'
+  statusCode  Int?
+  response    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime
+
+  @@index([route])
+  @@index([expiresAt])
+}
+
+// ─── Storyboard Tournament ────────────────────────────────────────────────────
+// 分镜锦标赛：生成 N 个变体 → LLM-Judge + Mock CTR 评分 → 留存 top-k → 交叉遗传
+// 比赛过程全量存储，支持可视化回放整个进化轨迹
+
+model TournamentRun {
+  id           String              @id @default(cuid())
+  productId    String
+  baseScriptId String?
+  status       String // 'running' | 'completed' | 'failed'
+  generation   Int                 @default(0)
+  maxGens      Int                 @default(5)
+  populationN  Int                 @default(10)
+  winnerId     String? // TournamentVariant.id
+  config       Json? // judge weights, mutation rate, etc.
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  variants     TournamentVariant[]
+
+  @@index([productId])
+  @@index([status])
+}
+
+model TournamentVariant {
+  id             String        @id @default(cuid())
+  tournamentId   String
+  tournament     TournamentRun @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  generation     Int
+  parentIds      String[]      @default([])
+  genes          Json // factor array — the heritable "DNA" of this variant
+  scriptSnapshot Json // full Script at this generation
+  llmScore       Float? // LLM-Judge composite (0-15 max)
+  ctrScore       Float? // Mock CTR model output (0-1)
+  compositeScore Float? // weighted final (llmScore*0.6 + ctrScore*15*0.4)
+  scoreBreakdown Json? // per-dimension scores
+  status         String // 'pending' | 'scored' | 'survivor' | 'eliminated'
+  createdAt      DateTime      @default(now())
+
+  @@index([tournamentId])
+  @@index([generation])
+  @@index([compositeScore])
+  @@index([status])
+}

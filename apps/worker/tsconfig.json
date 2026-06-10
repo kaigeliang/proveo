@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "rootDirs": [
+      "src",
+      "../../packages/db/src",
+      "../../packages/queue/src",
+      "../../packages/storage/src",
+      "../../packages/agent-runtime/src"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@aigc-video-hub/db": ["../../packages/db/src/index.ts"],
+      "@aigc-video-hub/queue": ["../../packages/queue/src/index.ts"],
+      "@aigc-video-hub/storage": ["../../packages/storage/src/index.ts"],
+      "@aigc-video-hub/agent-runtime": ["../../packages/agent-runtime/src/index.ts"],
+      "@aigc-video-hub/shared": ["../../packages/shared/types.ts"],
+      "@aigc-video-hub/trustloop": ["../../packages/trustloop/src/index.ts"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "../../packages/shared/**/*",
+    "../../packages/db/src/**/*",
+    "../../packages/queue/src/**/*",
+    "../../packages/storage/src/**/*",
+    "../../packages/agent-runtime/src/**/*",
+    "../../packages/trustloop/src/**/*"
+  ]
+}

@@ -1,0 +1,153 @@
+/* =============================================================
+   Proveo · Design Tokens
+   风格：高级暖白工作台 · 石墨文字 · 克制 cyan 信号 · 极细边框
+   用法：在应用根节点引入本文件，深色模式给 <html> 加 data-theme="dark"
+   ============================================================= */
+
+:root {
+  /* ---------- 1. 基础色板 Primitives ---------- */
+
+  /* 中性色（暖灰）—— 背景 / 边框 / 文字的来源 */
+  --neutral-0: #fffdf8;
+  --neutral-50: #f7f4ed;
+  --neutral-100: #eeebe3;
+  --neutral-200: #ddd8ce;
+  --neutral-300: #c8c1b5;
+  --neutral-400: #9a9489;
+  --neutral-500: #726d63;
+  --neutral-600: #565149;
+  --neutral-700: #3d3933;
+  --neutral-800: #28251f;
+  --neutral-900: #111827;
+
+  /* 主强调色（cyan = 生产信号 / 聚焦）—— 只作小面积信号使用 */
+  --primary-50: #e9fbfd;
+  --primary-100: #d2f4f8;
+  --primary-200: #a8e8f0;
+  --primary-300: #75d7e4;
+  --primary-400: #35bdcf;
+  --primary-500: #129fb2;
+  --primary-600: #0d7f91;
+  --primary-700: #0e6574;
+  --primary-800: #104f5c;
+  --primary-900: #123f49;
+
+  /* 状态色（仅在表达状态时出现，平时克制） */
+  --success-50: #e1f5ee;
+  --success-500: #1d9e75;
+  --success-700: #0f6e56;
+  --warning-50: #faeeda;
+  --warning-500: #ba7517;
+  --warning-700: #854f0b;
+  --danger-50: #fff0ee;
+  --danger-500: #df5d51;
+  --danger-700: #9b332d;
+
+  /* ---------- 2. 语义别名 Semantic（组件只用这一层）---------- */
+
+  /* 背景 */
+  --bg-page: var(--neutral-50); /* 页面底色 */
+  --bg-surface: var(--neutral-0); /* 卡片 / 输入框 / 面板 */
+  --bg-subtle: var(--neutral-100); /* 用户气泡 / 缩略图占位 / 指标卡 */
+  --bg-info: var(--primary-50); /* 主按钮浅底 / 选中态 */
+  --bg-success: var(--success-50);
+  --bg-warning: var(--warning-50);
+  --bg-danger: var(--danger-50);
+
+  /* 文字 */
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-400); /* 占位符 / 弱提示 */
+  --text-info: var(--primary-700); /* 强调色文字 / 主按钮文字 */
+  --text-success: var(--success-700);
+  --text-warning: var(--warning-700);
+  --text-danger: var(--danger-700);
+  --text-on-accent: var(--neutral-0); /* 实心强调按钮上的文字 */
+
+  /* 边框（极细是这套风格的标志） */
+  --border-tertiary: rgba(17, 24, 39, 0.1); /* 默认 0.5px 边框 */
+  --border-secondary: rgba(17, 24, 39, 0.18); /* hover / 输入框 / chip */
+  --border-primary: rgba(17, 24, 39, 0.28);
+  --border-info: var(--primary-500); /* 选中 / 聚焦强调 */
+
+  /* ---------- 3. 圆角 Radius（偏大）---------- */
+  --radius-sm: 6px;
+  --radius-md: 9px; /* 按钮 / chip / 小卡 */
+  --radius-lg: 12px; /* 卡片 / 输入框 / 面板（主力） */
+  --radius-xl: 16px;
+  --radius-pill: 9999px; /* 建议胶囊 / 标签 */
+
+  /* ---------- 4. 间距 Spacing（4px 基准）---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ---------- 5. 字体 Typography ---------- */
+  --font-sans: 'Avenir Next', 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px; /* 正文基准 */
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px; /* 首屏标题 */
+  --text-2xl: 24px; /* 指标大数字 */
+
+  --weight-regular: 400; /* 只用两档字重 */
+  --weight-medium: 500;
+
+  --leading-tight: 1.3;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.75; /* 对话正文 */
+
+  /* ---------- 6. 阴影 Shadow（几乎不用，仅悬浮态）---------- */
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --shadow-md: 0 18px 46px rgba(17, 24, 39, 0.08); /* 弹层 / 下拉 */
+  --focus-ring: 0 0 0 3px var(--primary-100); /* 输入聚焦 */
+
+  /* ---------- 7. 动效 Motion ---------- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+}
+
+/* ============================================================
+   深色模式：只重写语义别名，组件无需改动
+   ============================================================ */
+[data-theme='dark'] {
+  --bg-page: #141413;
+  --bg-surface: #1e1e1c;
+  --bg-subtle: #2a2a27;
+  --bg-info: rgba(18, 159, 178, 0.16);
+  --bg-success: rgba(29, 158, 117, 0.16);
+  --bg-warning: rgba(186, 117, 23, 0.18);
+  --bg-danger: rgba(226, 75, 74, 0.16);
+
+  --text-primary: #f5f5f2;
+  --text-secondary: #b0b0a8;
+  --text-tertiary: #78786f;
+  --text-info: #7ce0ea;
+  --text-success: #5dcaa5;
+  --text-warning: #ef9f27;
+  --text-danger: #f09595;
+  --text-on-accent: #fff;
+
+  --border-tertiary: rgba(245, 245, 242, 0.1);
+  --border-secondary: rgba(245, 245, 242, 0.18);
+  --border-primary: rgba(245, 245, 242, 0.28);
+  --border-info: var(--primary-400);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --focus-ring: 0 0 0 3px rgba(18, 159, 178, 0.35);
+}
+
+/* 不自动跟随系统 dark mode。当前产品默认保持浅色，只有显式 data-theme="dark" 才进入深色主题。 */

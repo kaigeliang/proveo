@@ -1,0 +1,150 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: ${{ github.repository_owner }}
+
+jobs:
+  publish-images:
+    name: Publish ${{ matrix.service }} image
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api
+            dockerfile: apps/api/Dockerfile
+            image: proveo-api
+          - service: worker
+            dockerfile: apps/worker/Dockerfile
+            image: proveo-worker
+          - service: web
+            dockerfile: apps/web/Dockerfile
+            image: proveo-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:latest
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    name: Deploy to Docker host
+    runs-on: ubuntu-latest
+    needs: publish-images
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/opt/proveo' }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+      GHCR_USER: ${{ secrets.GHCR_USER || github.actor }}
+      PROVEO_API_IMAGE: ghcr.io/${{ github.repository_owner }}/proveo-api:${{ github.sha }}
+      PROVEO_WORKER_IMAGE: ghcr.io/${{ github.repository_owner }}/proveo-worker:${{ github.sha }}
+      PROVEO_WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/proveo-web:${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Decide deploy mode
+        id: deploy-mode
+        run: |
+          set -euo pipefail
+          if [ -z "$DEPLOY_HOST" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "DEPLOY_HOST is not configured; remote deploy is skipped after image publish."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate deploy secrets
+        if: ${{ steps.deploy-mode.outputs.enabled == 'true' }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_USER" || { echo "DEPLOY_USER is required"; exit 1; }
+          test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY is required"; exit 1; }
+          test -n "$GHCR_READ_TOKEN" || { echo "GHCR_READ_TOKEN is required for private GHCR pulls"; exit 1; }
+
+      - name: Prepare SSH
+        if: ${{ steps.deploy-mode.outputs.enabled == 'true' }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/proveo_deploy_key
+          chmod 600 ~/.ssh/proveo_deploy_key
+          ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Copy compose file
+        if: ${{ steps.deploy-mode.outputs.enabled == 'true' }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/proveo_deploy_key -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH'"
+          scp -i ~/.ssh/proveo_deploy_key -P "$DEPLOY_PORT" deploy/docker-compose.production.yml "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/docker-compose.yml"
+
+      - name: Deploy release
+        if: ${{ steps.deploy-mode.outputs.enabled == 'true' }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/proveo_deploy_key -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "DEPLOY_PATH='$DEPLOY_PATH' \
+             GHCR_USER='$GHCR_USER' \
+             GHCR_READ_TOKEN='$GHCR_READ_TOKEN' \
+             PROVEO_API_IMAGE='$PROVEO_API_IMAGE' \
+             PROVEO_WORKER_IMAGE='$PROVEO_WORKER_IMAGE' \
+             PROVEO_WEB_IMAGE='$PROVEO_WEB_IMAGE' \
+             bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+
+          if [ ! -f .env ]; then
+            echo "Missing $DEPLOY_PATH/.env on deploy host"
+            exit 1
+          fi
+
+          {
+            printf 'PROVEO_API_IMAGE=%s\n' "$PROVEO_API_IMAGE"
+            printf 'PROVEO_WORKER_IMAGE=%s\n' "$PROVEO_WORKER_IMAGE"
+            printf 'PROVEO_WEB_IMAGE=%s\n' "$PROVEO_WEB_IMAGE"
+          } > .release.env
+          cat .env .release.env > .deploy.env
+
+          echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          docker compose --env-file .deploy.env -f docker-compose.yml pull api worker web
+          docker compose --env-file .deploy.env -f docker-compose.yml up -d postgres redis qdrant minio minio-init
+          docker compose --env-file .deploy.env -f docker-compose.yml run --rm migrate
+          docker compose --env-file .deploy.env -f docker-compose.yml up -d api worker web
+          docker compose --env-file .deploy.env -f docker-compose.yml ps
+          REMOTE

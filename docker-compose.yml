@@ -1,0 +1,194 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aigc_video_hub
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d aigc_video_hub']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - '6333:6333'
+      - '6334:6334'
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        mc mb --ignore-existing local/aigc-video-hub &&
+        mc anonymous set download local/aigc-video-hub/objects &&
+        echo 'MinIO bucket ready.'
+      "
+    restart: on-failure
+
+  migrate:
+    image: node:20-alpine
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aigc_video_hub
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        npm install --prefix /tmp/prisma-cli prisma@6.19.0 &&
+        /tmp/prisma-cli/node_modules/.bin/prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+      "
+    restart: on-failure
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    ports:
+      - '5001:5001'
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aigc_video_hub
+      REDIS_URL: redis://redis:6379
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION: aigc_video_clip_vectors
+      PIPELINE_MODE: queue
+      AGENT_ORCHESTRATION_ENABLED: 'true'
+      OBJECT_STORAGE_DRIVER: s3
+      OBJECT_STORAGE_BUCKET: aigc-video-hub
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      OBJECT_STORAGE_ACCESS_KEY_ID: minioadmin
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: minioadmin
+      OBJECT_STORAGE_FORCE_PATH_STYLE: 'true'
+      OBJECT_STORAGE_PUBLIC_BASE_URL: http://localhost:9000/aigc-video-hub
+      ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    env_file:
+      - .env
+    volumes:
+      - api_uploads:/app/apps/api/public/uploads
+      - api_generated:/app/apps/api/public/generated
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:5001/healthz | grep -q "\"ok\":true" || exit 1']
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      minio:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aigc_video_hub
+      REDIS_URL: redis://redis:6379
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION: aigc_video_clip_vectors
+      OBJECT_STORAGE_DRIVER: s3
+      OBJECT_STORAGE_BUCKET: aigc-video-hub
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      OBJECT_STORAGE_ACCESS_KEY_ID: minioadmin
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: minioadmin
+      OBJECT_STORAGE_FORCE_PATH_STYLE: 'true'
+      OBJECT_STORAGE_PUBLIC_BASE_URL: http://localhost:9000/aigc-video-hub
+      WORKER_PROCESSOR_MODE: production-local
+      AGENT_WORKER_CONCURRENCY: 1
+      SCRIPT_WORKER_CONCURRENCY: 2
+      RENDER_WORKER_CONCURRENCY: 1
+      MATERIAL_WORKER_CONCURRENCY: 2
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE: /api
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '5173:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 20s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  qdrant_data:
+  api_uploads:
+  api_generated:

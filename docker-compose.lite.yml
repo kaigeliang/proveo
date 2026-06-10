@@ -1,0 +1,203 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    command:
+      - postgres
+      - -c
+      - shared_buffers=64MB
+      - -c
+      - effective_cache_size=256MB
+      - -c
+      - maintenance_work_mem=32MB
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: aigc_video_hub
+    volumes:
+      - lite_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d aigc_video_hub']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command:
+      - redis-server
+      - --appendonly
+      - 'yes'
+      - --maxmemory
+      - 128mb
+      - --maxmemory-policy
+      - noeviction
+    volumes:
+      - lite_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    image: node:20-bookworm-slim
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aigc_video_hub
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        npm install --prefix /tmp/prisma-cli prisma@6.19.0 &&
+        /tmp/prisma-cli/node_modules/.bin/prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+      "
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - '127.0.0.1:${API_PORT:-5001}:5001'
+    environment: &lite-env
+      NODE_ENV: production
+      NODE_OPTIONS: ${NODE_OPTIONS:---max-old-space-size=256}
+      PORT: 5001
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost}
+      PUBLIC_WEB_BASE_URL: ${PUBLIC_WEB_BASE_URL:-http://localhost}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost,http://127.0.0.1}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aigc_video_hub
+      REDIS_URL: redis://redis:6379
+      PIPELINE_MODE: queue
+      USE_PRODUCTION_PIPELINE: 'true'
+      AGENT_ORCHESTRATION_ENABLED: 'true'
+      OBJECT_STORAGE_DRIVER: local
+      OBJECT_STORAGE_LOCAL_ROOT: /app/tmp/object-storage
+      OBJECT_STORAGE_PUBLIC_BASE_URL: ${OBJECT_STORAGE_PUBLIC_BASE_URL:-http://localhost/objects}
+      WORKER_LOCK_DURATION_MS: ${WORKER_LOCK_DURATION_MS:-900000}
+      ARK_BASE_URL: ${ARK_BASE_URL:-https://ark.cn-beijing.volces.com/api/v3}
+      ARK_API_KEY: ${ARK_API_KEY:-}
+      ARK_TEXT_MODEL_ID: ${ARK_TEXT_MODEL_ID:-}
+      ARK_VIDEO_MODEL_ID: ${ARK_VIDEO_MODEL_ID:-}
+      ARK_ENABLE_TEXT: ${ARK_ENABLE_TEXT:-true}
+      ARK_ENABLE_VIDEO: ${ARK_ENABLE_VIDEO:-true}
+      SPEC_ENABLE_SEEDANCE: ${SPEC_ENABLE_SEEDANCE:-true}
+      SEEDANCE_ALLOW_T2V_FALLBACK: 'true'
+      SEEDANCE_CONCURRENCY: ${SEEDANCE_CONCURRENCY:-1}
+      SEEDANCE_REQUEST_DURATION_SECONDS: ${SEEDANCE_REQUEST_DURATION_SECONDS:-5}
+      SEEDANCE_MAX_ATTEMPTS: ${SEEDANCE_MAX_ATTEMPTS:-3}
+      SEEDANCE_RETRY_BASE_MS: ${SEEDANCE_RETRY_BASE_MS:-4000}
+      SEEDANCE_RETRY_CAP_MS: ${SEEDANCE_RETRY_CAP_MS:-45000}
+      SEEDANCE_COOLDOWN_MS: ${SEEDANCE_COOLDOWN_MS:-15000}
+      ARK_TIMEOUT_MS: ${ARK_TIMEOUT_MS:-90000}
+      ARK_VIDEO_TIMEOUT_MS: ${ARK_VIDEO_TIMEOUT_MS:-240000}
+      ARK_VIDEO_POLL_MS: ${ARK_VIDEO_POLL_MS:-4000}
+      TRUSTLOOP_WEB_SEARCH: 'false'
+      TREND_REFRESH_ENABLED: 'false'
+      TREND_ENRICH_ENABLED: 'false'
+      VECTOR_REINDEX_ENABLED: 'false'
+      VECTOR_STORE_PROVIDER: off
+      CLIP_ENABLED: 'false'
+      CLIP_WARMUP_ENABLED: 'false'
+      PGVECTOR_ENABLED: 'false'
+      QDRANT_ENABLED: 'false'
+      QWEN_IMAGE_PROVIDER: ${QWEN_IMAGE_PROVIDER:-local}
+      QWEN_IMAGE_BASE_URL: ${QWEN_IMAGE_BASE_URL:-https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation}
+      QWEN_IMAGE_API_KEY: ${QWEN_IMAGE_API_KEY:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      QWEN_IMAGE_MODEL_ID: ${QWEN_IMAGE_MODEL_ID:-qwen-image-2.0-pro}
+      QWEN_VL_BASE_URL: ''
+      QWEN_VL_API_KEY: ''
+      QWEN_VL_MEDIA_UPLOAD_URL: ''
+      QINGYUN_API_KEY: ''
+      QINGYUN_BASE_URL: ''
+      GPTIMAGE2_PROVIDER: ${GPTIMAGE2_PROVIDER:-off}
+      GPTIMAGE2_BASE_URL: ${GPTIMAGE2_BASE_URL:-https://api.openai.com/v1/images/generations}
+      GPTIMAGE2_API_STYLE: ${GPTIMAGE2_API_STYLE:-images}
+      GPTIMAGE2_API_KEY: ${GPTIMAGE2_API_KEY:-}
+      GPTIMAGE2_MODEL_ID: ${GPTIMAGE2_MODEL_ID:-gpt-image-2}
+      GPTIMAGE2_QUALITY: ${GPTIMAGE2_QUALITY:-low}
+      GPTIMAGE2_TIMEOUT_MS: ${GPTIMAGE2_TIMEOUT_MS:-300000}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SEEDANCE_FIRST_LAST_FRAME_ENABLED: 'false'
+      SEEDANCE_FRAME_CHAIN_ENABLED: 'false'
+      SEEDANCE_WHOLE_VIDEO_AUTO: 'false'
+      AGENT_WORKER_CONCURRENCY: ${AGENT_WORKER_CONCURRENCY:-1}
+      SCRIPT_WORKER_CONCURRENCY: ${SCRIPT_WORKER_CONCURRENCY:-1}
+      RENDER_WORKER_CONCURRENCY: ${RENDER_WORKER_CONCURRENCY:-1}
+      MATERIAL_WORKER_CONCURRENCY: ${MATERIAL_WORKER_CONCURRENCY:-1}
+      MAINTENANCE_WORKER_CONCURRENCY: ${MAINTENANCE_WORKER_CONCURRENCY:-1}
+    volumes:
+      - lite_objects:/app/tmp/object-storage
+      - lite_uploads:/app/apps/api/public/uploads
+      - lite_generated:/app/apps/api/public/generated
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:5001/api/healthz | grep -q "\"ok\":true" || exit 1']
+      interval: 20s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *lite-env
+    volumes:
+      - lite_objects:/app/tmp/object-storage
+      - lite_uploads:/app/apps/api/public/uploads
+      - lite_generated:/app/apps/api/public/generated
+    healthcheck:
+      test: ['CMD-SHELL', 'pgrep -f "node.*apps/worker" > /dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE: /api
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '${WEB_PORT:-80}:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  lite_postgres_data:
+  lite_redis_data:
+  lite_objects:
+  lite_uploads:
+  lite_generated:

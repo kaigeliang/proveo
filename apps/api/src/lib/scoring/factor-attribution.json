@@ -1,0 +1,198 @@
+{
+  "generatedAt": "2026-06-01T08:34:26.412993+00:00",
+  "method": "univariate-lift-on-benchmarkScore",
+  "caution": "associational not causal; not category/product controlled",
+  "split": "creator-disjoint",
+  "trainCount": 699,
+  "testCount": 190,
+  "ablation": {
+    "A baseline(CLIP)": {
+      "spearman": 0.4492,
+      "ndcgAt20": 0.8834,
+      "r2": 0.1569,
+      "aucOrganicWinner": 0.8092
+    },
+    "B qwen-factors": {
+      "spearman": 0.2117,
+      "ndcgAt20": 0.825,
+      "r2": 0.0166,
+      "aucOrganicWinner": 0.6515
+    },
+    "C fusion": {
+      "spearman": 0.4489,
+      "ndcgAt20": 0.8898,
+      "r2": 0.1475,
+      "aucOrganicWinner": 0.8076
+    }
+  },
+  "factors": [
+    {
+      "factorId": "hook_type:unboxing",
+      "lift": 0.0739,
+      "sampleSize": 40,
+      "direction": "positive"
+    },
+    {
+      "factorId": "product_visible_ratio:high",
+      "lift": 0.0459,
+      "sampleSize": 612,
+      "direction": "positive"
+    },
+    {
+      "factorId": "scene_count:three_plus",
+      "lift": 0.0441,
+      "sampleSize": 134,
+      "direction": "positive"
+    },
+    {
+      "factorId": "has_hand_demo:true",
+      "lift": 0.0398,
+      "sampleSize": 632,
+      "direction": "positive"
+    },
+    {
+      "factorId": "has_unboxing:true",
+      "lift": 0.0365,
+      "sampleSize": 113,
+      "direction": "positive"
+    },
+    {
+      "factorId": "hook_type:product_demo",
+      "lift": 0.0363,
+      "sampleSize": 371,
+      "direction": "positive"
+    },
+    {
+      "factorId": "cta_count:multi",
+      "lift": 0.0359,
+      "sampleSize": 16,
+      "direction": "positive"
+    },
+    {
+      "factorId": "product_first_visible_second:under_1s",
+      "lift": 0.0333,
+      "sampleSize": 541,
+      "direction": "positive"
+    },
+    {
+      "factorId": "scene_count:five_plus",
+      "lift": 0.0288,
+      "sampleSize": 25,
+      "direction": "positive"
+    },
+    {
+      "factorId": "visual_style:clean_studio",
+      "lift": 0.0202,
+      "sampleSize": 35,
+      "direction": "positive"
+    },
+    {
+      "factorId": "product_first_visible_second:under_2s",
+      "lift": 0.0036,
+      "sampleSize": 19,
+      "direction": "positive"
+    },
+    {
+      "factorId": "product_first_visible_second:under_3s",
+      "lift": -0.0004,
+      "sampleSize": 14,
+      "direction": "negative"
+    },
+    {
+      "factorId": "visual_style:mixed",
+      "lift": -0.0013,
+      "sampleSize": 12,
+      "direction": "negative"
+    },
+    {
+      "factorId": "cta_count:one",
+      "lift": -0.0015,
+      "sampleSize": 197,
+      "direction": "negative"
+    },
+    {
+      "factorId": "visual_style:ugc_selfie",
+      "lift": -0.0023,
+      "sampleSize": 157,
+      "direction": "negative"
+    },
+    {
+      "factorId": "visual_style:lifestyle_home",
+      "lift": -0.0026,
+      "sampleSize": 495,
+      "direction": "negative"
+    },
+    {
+      "factorId": "has_human_face:true",
+      "lift": -0.0071,
+      "sampleSize": 472,
+      "direction": "negative"
+    },
+    {
+      "factorId": "scene_count:two_scenes",
+      "lift": -0.0155,
+      "sampleSize": 86,
+      "direction": "negative"
+    },
+    {
+      "factorId": "hook_type:lifestyle",
+      "lift": -0.0184,
+      "sampleSize": 81,
+      "direction": "negative"
+    },
+    {
+      "factorId": "product_visible_ratio:low",
+      "lift": -0.0212,
+      "sampleSize": 24,
+      "direction": "negative"
+    },
+    {
+      "factorId": "scene_count:single_scene",
+      "lift": -0.0271,
+      "sampleSize": 454,
+      "direction": "negative"
+    },
+    {
+      "factorId": "hook_type:pain_point",
+      "lift": -0.0308,
+      "sampleSize": 90,
+      "direction": "negative"
+    },
+    {
+      "factorId": "hook_type:social_proof",
+      "lift": -0.035,
+      "sampleSize": 24,
+      "direction": "negative"
+    },
+    {
+      "factorId": "product_first_visible_second:late",
+      "lift": -0.0391,
+      "sampleSize": 116,
+      "direction": "negative"
+    },
+    {
+      "factorId": "has_before_after:true",
+      "lift": -0.0429,
+      "sampleSize": 136,
+      "direction": "negative"
+    },
+    {
+      "factorId": "product_visible_ratio:medium",
+      "lift": -0.0443,
+      "sampleSize": 61,
+      "direction": "negative"
+    },
+    {
+      "factorId": "hook_type:before_after",
+      "lift": -0.0505,
+      "sampleSize": 55,
+      "direction": "negative"
+    },
+    {
+      "factorId": "hook_type:offer",
+      "lift": -0.0558,
+      "sampleSize": 38,
+      "direction": "negative"
+    }
+  ]
+}
